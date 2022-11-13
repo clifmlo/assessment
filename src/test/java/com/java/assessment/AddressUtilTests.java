@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -42,9 +43,8 @@ class AddressUtilTests {
 	void testPrintAllAddresses() throws JsonProcessingException {
 		String jsonAddresses = getAllJsonAddresses();
 		List<Address> addresses = mapper.readValue(jsonAddresses,  new TypeReference<List<Address>>(){});
-		String prettyAddresses = addressUtil.printAllAddresses(addresses);
-       //System.out.println(prettyAddresses);
-		//assertEquals("Physical Address: Address 1 Line 2 - City 1 - Eastern Cape - 1234 - South Africa", prettyAddress);
+		addresses = addresses.stream().filter(address ->(addressUtil.validateAddress(address).isEmpty())).collect(Collectors.toList()); //We validate and print only valid addresses because invalid addresses will cause exception and we cannot alter our address object to cater for invalid addresses
+		addressUtil.printAllAddresses(addresses);
 	}
 
 	@Test
@@ -77,12 +77,18 @@ class AddressUtilTests {
 
 		if (!errors1.isEmpty()) {
 			System.out.println("Address 1 Errors:" + errors1);
+		} else {
+			System.out.println("Address 1 is valid");
 		}
 		if (!errors2.isEmpty()) {
 			System.out.println("Address 2 Errors:" + errors2);
+		} else {
+			System.out.println("Address 2 is valid");
 		}
 		if (!errors3.isEmpty()) {
 			System.out.println("Address 3 Errors:" + errors3);
+		} else {
+			System.out.println("Address 3 is valid");
 		}
 		assertEquals(0, errors1.size()); // There must be no errors, address is valid
 		assertEquals(1, errors2.size()); // There is address line error
@@ -116,73 +122,61 @@ class AddressUtilTests {
 
 	private String getAllJsonAddresses () {
 		return "[\n" +
-				"  {\n" +
-				"    \"id\": \"1\",\n" +
-				"    \"type\": {\n" +
-				"      \"code\": \"1\",\n" +
-				"      \"name\": \"Physical Address\"\n" +
+				"    {\n" +
+				"        \"id\": \"1\",\n" +
+				"        \"type\": {\n" +
+				"            \"code\": \"1\",\n" +
+				"            \"name\": \"Physical Address\"\n" +
+				"        },\n" +
+				"        \"addressLineDetail\": {\n" +
+				"            \"line1\": \"Address 1\",\n" +
+				"            \"line2\": \"Line 2\"\n" +
+				"        },\n" +
+				"        \"provinceOrState\": {\n" +
+				"            \"code\": \"5\",\n" +
+				"            \"name\": \"Eastern Cape\"\n" +
+				"        },\n" +
+				"        \"cityOrTown\": \"City 1\",\n" +
+				"        \"country\": {\n" +
+				"            \"code\": \"ZA\",\n" +
+				"            \"name\": \"South Africa\"\n" +
+				"        },\n" +
+				"        \"postalCode\": \"1234\",\n" +
+				"        \"lastUpdated\": \"2015-06-21T00:00:00.000Z\"\n" +
 				"    },\n" +
-				"    \"addressLineDetail\": {\n" +
-				"      \"line1\": \"Address 1\",\n" +
-				"      \"line2\": \"Line 2\"\n" +
+				"    {\n" +
+				"        \"id\": \"2\",\n" +
+				"        \"type\": {\n" +
+				"            \"code\": \"2\",\n" +
+				"            \"name\": \"Postal Address\"\n" +
+				"        },\n" +
+				"        \"cityOrTown\": \"City 2\",\n" +
+				"        \"country\": {\n" +
+				"            \"code\": \"LB\",\n" +
+				"            \"name\": \"Lebanon\"\n" +
+				"        },\n" +
+				"        \"postalCode\": \"2345\",\n" +
+				"        \"lastUpdated\": \"2017-06-21T00:00:00.000Z\"\n" +
 				"    },\n" +
-				"    \"provinceOrState\": {\n" +
-				"      \"code\": \"5\",\n" +
-				"      \"name\": \"Eastern Cape\"\n" +
-				"    },\n" +
-				"    \"cityOrTown\": \"City 1\",\n" +
-				"    \"country\": {\n" +
-				"      \"code\": \"ZA\",\n" +
-				"      \"name\": \"South Africa\"\n" +
-				"    },\n" +
-				"    \"postalCode\": \"1234\",\n" +
-				"    \"lastUpdated\": \"2015-06-21T00:00:00.000Z\"\n" +
-				"  },\n" +
-				"  {\n" +
-				"    \"id\": \"2\",\n" +
-				"    \"type\": {\n" +
-				"      \"code\": \"2\",\n" +
-				"      \"name\": \"Postal Address\"\n" +
-				"    },\n" +
-				"    \"addressLineDetail\": {\n" +
-				"      \"line1\": \"Test 1\",\n" +
-				"      \"line2\": \"\"\n" +
-				"    },\n" +
-				"    \"provinceOrState\": {\n" +
-				"      \"code\": \"5\",\n" +
-				"      \"name\": \"Gauteg\"\n" +
-				"    },\n" +
-				"    \"cityOrTown\": \"City 2\",\n" +
-				"    \"country\": {\n" +
-				"      \"code\": \"LB\",\n" +
-				"      \"name\": \"Lebanon\"\n" +
-				"    },\n" +
-				"    \"postalCode\": \"2345\",\n" +
-				"    \"lastUpdated\": \"2017-06-21T00:00:00.000Z\"\n" +
-				"  },\n" +
-				"  {\n" +
-				"    \"id\": \"3\",\n" +
-				"    \"type\": {\n" +
-				"      \"code\": \"5\",\n" +
-				"      \"name\": \"Business Address\"\n" +
-				"    },\n" +
-				"    \"addressLineDetail\": {\n" +
-				"      \"line1\": \"Addres test\",\n" +
-				"      \"line2\": \"\"\n" +
-				"    },\n" +
-				"    \"provinceOrState\": {\n" +
-				"      \"code\": \"5\",\n" +
-				"      \"name\": \"Free State\"\n" +
-				"    },\n" +
-				"    \"cityOrTown\": \"City 3\",\n" +
-				"    \"country\": {\n" +
-				"      \"code\": \"ZA\",\n" +
-				"      \"name\": \"South Africa\"\n" +
-				"    },\n" +
-				"    \"postalCode\": \"3456\",\n" +
-				"    \"suburbOrDistrict\": \"Suburb 3\",\n" +
-				"    \"lastUpdated\": \"2018-06-13T00:00:00.000Z\"\n" +
-				"  }\n" +
+				"    {\n" +
+				"        \"id\": \"3\",\n" +
+				"        \"type\": {\n" +
+				"            \"code\": \"5\",\n" +
+				"            \"name\": \"Business Address\"\n" +
+				"        },\n" +
+				"        \"addressLineDetail\": {\n" +
+				"            \"line1\": \"Address 3\",\n" +
+				"            \"line2\": \"\"\n" +
+				"        },\n" +
+				"        \"cityOrTown\": \"City 3\",\n" +
+				"        \"country\": {\n" +
+				"            \"code\": \"ZA\",\n" +
+				"            \"name\": \"South Africa\"\n" +
+				"        },\n" +
+				"        \"postalCode\": \"3456\",\n" +
+				"        \"suburbOrDistrict\": \"Suburb 3\",\n" +
+				"        \"lastUpdated\": \"2018-06-13T00:00:00.000Z\"\n" +
+				"    }\n" +
 				"]";
 	}
 
